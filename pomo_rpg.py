@@ -3,7 +3,10 @@ import json
 import os
 import random
 import platform
+import sys
+import subprocess # added for PowerShell sound command
 from datetime import datetime
+from window_manager import minimize_terminal, restore_terminal
 
 # We will use 'rich' for a modern, colorful CLI experience
 # If you don't have it , run: pip install rich
@@ -21,14 +24,14 @@ except ImportError:
 
 console = Console()
 
-#CONFIGURATION
+# --- CONFIGURATION ---
 DATA_FILE = "pomo_rpg_data.json"
 WORK_DURATION = 1 * 60  # 25 minutes
 BREAK_DURATION = 1 * 60   # 5 minutes
 LONG_BREAK_DURATION = 1 * 60  # 20 minutes
 XP_PER_SESSION = 100
 
-#GAME LOGIC & PERSISTANCE
+# --- GAME LOGIC & PERSISTANCE ---
 
 class Player:
     def __init__(self):
@@ -83,12 +86,27 @@ class Player:
 def play_sound():
     # Plays a cross-platform sound notification
     sys_os = platform.system()
+    # Visual feedback in case audio fails
+    console.print("[italic dim]Playing notification sound...[/italic dim]")
+
     try:
         if sys_os == "Windows":
-            import winsound
-            winsound.Beep(1000, 1000)  # Frequency, Duration
+            # Plays the standard 'tada.wav' sound on Windows
+            try:
+                subprocess.run([
+                    "powershell",
+                    "-c",
+                    "(New-Object Media.SoundPlayer 'C:\\Windows\\Media\\tada.wav').PlaySync();"
+                ], timeout=3)
+            except Exception:
+                try:
+                    import winsound
+                    windsound.MessageBeep(winsound.MB_ICONASTERISK)
+                except ImportError:
+                    print('\a')  # Fallback to bell character
         elif sys_os == "Darwin":  # macOS
-            os.system('afplay /System/Library/Sounds/Ping.aiff')
+            "Play a system sound"
+            ret_code = os.system('afplay /System/Library/Sounds/Glass.aiff')
         elif sys_os == "Linux":
             # Try 'spd-say' (speech-dispatcher) first as it's common on Ubuntu/Debian
             if os.system("spd-say 'Timer Complete' 2>/dev/null") != 0:
@@ -97,6 +115,7 @@ def play_sound():
             print('\a')
     except Exception as e:
         pass  # If sound fails, just ignore
+
 
 def save_game(player):
     # Save player data to a JSON file
@@ -122,10 +141,12 @@ def load_game():
         console.print("[blue]New adventure started. Creating profile...[/blue]")
     return player
 
-#TIMER FUNCTIONALITY
+# --- TIMER FUNCTIONALITY ---
 def run_timer(duration, task_name="Focusing"):
     # Runs a visual progress bar for the specified duration.
     console.print(f"\n[bold white]Beginning task: {task_name}[/bold white]")
+    time.sleep(1)  # Brief pause before starting
+    minimize_terminal()
 
     # Rich progress bar context manager
     with Progress(
@@ -141,9 +162,11 @@ def run_timer(duration, task_name="Focusing"):
             time.sleep(1) # Udpate every second
             progress.update(task_id, advance=1)
     
+    restore_terminal()
     console.print(f"[bold green]{task_name} complete![/bold green] \a")  # \a is the bell character
+    play_sound()
 
-#UI & MENUS
+# --- UI & MENUS ---
 def show_stats(player):
     # Displays the player's RPG stats in a table format
     table = Table(title="Character Status")
@@ -188,6 +211,7 @@ def main():
         console.print(f"[2. [{break_style}]Start {break_desc}[/{break_style}] ({break_dur_text})]")
         console.print("[3. [yellow]View Character Stats[/yellow]]")
         console.print("[4. [red]Quit (and save)[/red]]")
+        console.print("[5. Test Sound]")
 
         choice = input("\n>> ")
 
@@ -232,6 +256,9 @@ def main():
             save_game(player)
             console.print("[bold blue]Game saved. Goodbye![/bold blue]")
             break
+        elif choice == '5':
+            console.print("[bold]Testing sound notification...[/bold]")
+            play_sound()
         else:
             console.print("[red]Invalid choice. Please try again.[/red]")
 

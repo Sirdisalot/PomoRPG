@@ -24,6 +24,7 @@ console = Console()
 DATA_FILE = "pomo_rpg_data.json"
 WORK_DURATION = 25 * 60  # 25 minutes
 BREAK_DURATION = 5 * 60   # 5 minutes
+LONG_BREAK_DURATION = 20 * 60  # 20 minutes
 XP_PER_SESSION = 100
 
 #GAME LOGIC & PERSISTANCE
@@ -33,11 +34,14 @@ class Player:
         self.current_xp = 0
         self.required_xp = 500 # Starting requirement
         self.sessions_completed = 0
+        self.sessions_since_long_break = 0
         self.title = "Novice Focuser"
 
     def gain_xp(self, amount):
         self.current_xp += amount
         self.sessions_completed += 1
+        self.sessions_since_long_break += 1
+         # Flavor text for gaining XP
         console.print(f"[bold green] + {amount} XP![/bold green]")
 
         # Check for level up
@@ -60,6 +64,7 @@ class Player:
             "current_xp": self.current_xp,
             "required_xp": self.required_xp,
             "sessions_completed": self.sessions_completed,
+            "sessions_since_long_break": self.sessions_since_long_break,
             "title": self.title
         }
     
@@ -68,6 +73,7 @@ class Player:
         self.current_xp = data.get("current_xp", 0)
         self.required_xp = data.get("required_xp", 500)
         self.sessions_completed = data.get("sessions_completed", 0)
+        self.sessions_since_long_break = data.get("sessions_since_long_break", 0)
         self.title = data.get("title", "Novice Focuser")
 
 def save_game(player):
@@ -126,6 +132,7 @@ def show_stats(player):
     table.add_row("Level", str(player.level))
     table.add_row("XP", f"{player.current_xp} / {player.required_xp}")
     table.add_row("Sessions Completed", str(player.sessions_completed))
+    table.add_row("Streak (to Long Break)", f"{player.sessions_since_long_break}" / 4)
 
     # Calculate progress bar for XP manually for the table view
     xp_percent = int((player.current_xp / player.required_xp) * 20)
@@ -142,9 +149,20 @@ def main():
 
     while True:
         print("\n")
+        # Determine break type
+        if player.sessions_since_long_break >= 4:
+            break_desc = "Long Break"
+            break_dur_text = "20 min"
+            break_style = "bold cyan"
+        else:
+            break_desc = "Short Break"
+            break_dur_text = "5 min"
+            break_style = "blue"
+
+
         console.print("[bold]Choose an action:[/bold]")
         console.print("[1. [green]Start Work Session[/green] (25 min)]")
-        console.print("[2. [blue]Start Short Break[/blue] (5 min)]")
+        console.print(f"2. [{break_style}]Start {break_desc}[/{break_style}] ({break_dur_text})")
         console.print("[3. [yellow]View Character Stats[/yellow]]")
         console.print("[4. [red]Quit (and save)[/red]]")
 
@@ -152,7 +170,7 @@ def main():
 
         if choice == '1':
             # Optional: Let user name the task
-            task_name = input("Enter task name (or press Enter for 'Focus Session'): ")
+            task = input("Enter task name (or press Enter for 'Focus Session'): ")
             if not task.strip():
                 task_name = "Focus Session"
             try:
@@ -169,8 +187,18 @@ def main():
                 console.print("\n[red]Work session aborted! No XP gained.[/red]")
         
         elif choice == '2':
+            if player.sessions_since_long_break >= 4:
+                duration = LONG_BREAK_DURATION
+                task_name = "Long Break"
+                # Reset the counter
+                player.sessions_since_long_break = 0
+                save_game(player)
+            else:
+                duration = BREAK_DURATION
+                task_name = "Short Break"
             try:
-                run_timer(BREAK_DURATION, "Short Break")
+                run_timer(duration, task_name)
+                console.print("[italic]You feel refreshed![/italic]")
             except KeyboardInterrupt:
                 console.print("\n[red]Break ended early.[/red]")
 

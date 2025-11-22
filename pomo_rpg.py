@@ -26,9 +26,9 @@ console = Console()
 
 # --- CONFIGURATION ---
 DATA_FILE = "pomo_rpg_data.json"
-WORK_DURATION = 1 * 60  # 25 minutes
-BREAK_DURATION = 1 * 60   # 5 minutes
-LONG_BREAK_DURATION = 1 * 60  # 20 minutes
+WORK_DURATION = 25 * 60  # 25 minutes
+BREAK_DURATION = 5 * 60   # 5 minutes
+LONG_BREAK_DURATION = 20 * 60  # 20 minutes
 XP_PER_SESSION = 100
 
 # --- GAME LOGIC & PERSISTANCE ---

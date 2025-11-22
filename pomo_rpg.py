@@ -2,6 +2,7 @@ import time
 import json
 import os
 import random
+import platform
 from datetime import datetime
 
 # We will use 'rich' for a modern, colorful CLI experience
@@ -10,7 +11,7 @@ from datetime import datetime
 try:
     from rich.console import Console
     from rich.table import Table
-    from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
+    from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeRemainingColumn
     from rich.panel import Panel
     from rich.layout import Layout
     from rich import print as rprint
@@ -22,12 +23,13 @@ console = Console()
 
 #CONFIGURATION
 DATA_FILE = "pomo_rpg_data.json"
-WORK_DURATION = 25 * 60  # 25 minutes
-BREAK_DURATION = 5 * 60   # 5 minutes
-LONG_BREAK_DURATION = 20 * 60  # 20 minutes
+WORK_DURATION = 1 * 60  # 25 minutes
+BREAK_DURATION = 1 * 60   # 5 minutes
+LONG_BREAK_DURATION = 1 * 60  # 20 minutes
 XP_PER_SESSION = 100
 
 #GAME LOGIC & PERSISTANCE
+
 class Player:
     def __init__(self):
         self.level = 1
@@ -76,6 +78,24 @@ class Player:
         self.sessions_since_long_break = data.get("sessions_since_long_break", 0)
         self.title = data.get("title", "Novice Focuser")
 
+def play_sound():
+    # Plays a cross-platform sound notification
+    sys_os = platform.system()
+    try:
+        if sys_os == "Windows":
+            import winsound
+            winsound.Beep(1000, 1000)  # Frequency, Duration
+        elif sys_os == "Darwin":  # macOS
+            os.system('afplay /System/Library/Sounds/Ping.aiff')
+        elif sys_os == "Linux":
+            # Try 'spd-say' (speech-dispatcher) first as it's common on Ubuntu/Debian
+            if os.system("spd-say 'Timer Complete' 2>/dev/null") != 0:
+                print('\a')  # Fallback to bell character
+        else:
+            print('\a')
+    except Exception as e:
+        pass  # If sound fails, just ignore
+
 def save_game(player):
     # Save player data to a JSON file
     try:
@@ -110,7 +130,8 @@ def run_timer(duration, task_name="Focusing"):
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         BarColumn(),
-        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TextColumn("."),
+        TimeRemainingColumn(),
         console=console
     ) as progress:
         task_id = progress.add_task(f"{task_name}...", total=duration)
@@ -162,7 +183,7 @@ def main():
 
         console.print("[bold]Choose an action:[/bold]")
         console.print("[1. [green]Start Work Session[/green] (25 min)]")
-        console.print(f"2. [{break_style}]Start {break_desc}[/{break_style}] ({break_dur_text})")
+        console.print(f"[2. [{break_style}]Start {break_desc}[/{break_style}] ({break_dur_text})]")
         console.print("[3. [yellow]View Character Stats[/yellow]]")
         console.print("[4. [red]Quit (and save)[/red]]")
 
@@ -178,9 +199,9 @@ def main():
                 player.gain_xp(XP_PER_SESSION)
                 
                 # Random flavor text/loot drop chance
-                if random.random() > 0.7:
-                    loot = random.choice(["a Focus Amulet", "a Productivity Potion", "a Time Turner"])
-                    console.print(f"[bold gold1]Lucky Find! You found a {loot}![/bold gold1]")
+                # if random.random() > 0.7:
+                #     loot = random.choice(["a Focus Amulet", "a Productivity Potion", "a Time Turner"])
+                #     console.print(f"[bold gold1]Lucky Find! You found a {loot}![/bold gold1]")
 
                 save_game(player)
             except KeyboardInterrupt:

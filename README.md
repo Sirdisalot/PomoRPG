@@ -59,13 +59,12 @@ pomo_rpg.py: The main entry point containing the Game Loop, Player class, and Ti
 
 pomo_rpg_data.json: (Generated automatically) Stores your save data.
 
+window_manager.py: Takes care of minimizing and restoring the window 
+
 Future Roadmap (Ideas for Contribution)
 
-Add a "Long Break" (15 min) option after 4 sessions.
 
 Implement an Inventory system to store "Loot" found during sessions.
-
-Add sound effects for timer completion.
 
 Create a "Quest" system (e.g., "Complete 4 sessions today").
 

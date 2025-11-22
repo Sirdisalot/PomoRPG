@@ -56,7 +56,9 @@ class Player:
         self.required_xp = int(self.required_xp * 1.5)  # Increase XP requirement
         
          # Flavor text for leveling up
-        titles = {"Apprentice Focuser", "Adept Focuser", "Master Focuser", "Grandmaster Focuser", "Sage of Focuser"}
+        titles = ["Apprentice Focuser", "Adept Focuser", "Master Focuser", "Grandmaster Focuser", "Sage of Focuser"]
+        if self.level <= len(titles):
+            self.title = f"{titles[self.level - 1]} Novice Focuser"
 
         console.print(Panel(f"[bold yellow]LEVEL UP![/bold yellow]\nYou are now Level {self.level} - {self.title}!", title="Congratulations"))
 
@@ -153,7 +155,7 @@ def show_stats(player):
     table.add_row("Level", str(player.level))
     table.add_row("XP", f"{player.current_xp} / {player.required_xp}")
     table.add_row("Sessions Completed", str(player.sessions_completed))
-    table.add_row("Streak (to Long Break)", f"{player.sessions_since_long_break}" / 4)
+    table.add_row("Streak (to Long Break)", f"{player.sessions_since_long_break} / 4")
 
     # Calculate progress bar for XP manually for the table view
     xp_percent = int((player.current_xp / player.required_xp) * 20)

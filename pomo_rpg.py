@@ -94,4 +94,95 @@ def load_game():
         console.print("[blue]New adventure started. Creating profile...[/blue]")
     return player
 
-#TIME FUNCTIONALITY
+#TIMER FUNCTIONALITY
+def run_timer(duration, task_name="Focusing"):
+    # Runs a visual progress bar for the specified duration.
+    console.print(f"\n[bold white]Beginning task: {task_name}[/bold white]")
+
+    # Rich progress bar context manager
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        console=console
+    ) as progress:
+        task_id = progress.add_task(f"{task_name}...", total=duration)
+        while not progress.finished:
+            time.sleep(1) # Udpate every second
+            progress.update(task_id, advance=1)
+    
+    console.print(f"[bold green]{task_name} complete![/bold green] \a")  # \a is the bell character
+
+#UI & MENUS
+def show_stats(player):
+    # Displays the player's RPG stats in a table format
+    table = Table(title="Character Status")
+    
+    table.add_column("Attribute", style="cyan", no_wrap=True)
+    table.add_column("Value", style="magenta")
+
+    table.add_row("Title", str(player.title))
+    table.add_row("Level", str(player.level))
+    table.add_row("XP", f"{player.current_xp} / {player.required_xp}")
+    table.add_row("Sessions Completed", str(player.sessions_completed))
+
+    # Calculate progress bar for XP manually for the table view
+    xp_percent = int((player.current_xp / player.required_xp) * 20)
+    xp_bar = "█" * xp_percent + "░" * (20 - xp_percent)
+    table.add_row("XP Progress", f"[{xp_bar}]")
+
+    console.print(table)
+
+def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    console.print(Panel.fit("[bold magneta]Welcome to Pomodoro RPG![/bold magneta]\nGamifiy your productivity journey!", subtitle="v1.0"))
+
+    player = load_game()
+
+    while True:
+        print("\n")
+        console.print("[bold]Choose an action:[/bold]")
+        console.print("[1. [green]Start Work Session[/green] (25 min)]")
+        console.print("[2. [blue]Start Short Break[/blue] (5 min)]")
+        console.print("[3. [yellow]View Character Stats[/yellow]]")
+        console.print("[4. [red]Quit (and save)[/red]]")
+
+        choice = input("\n>> ")
+
+        if choice == '1':
+            # Optional: Let user name the task
+            task_name = input("Enter task name (or press Enter for 'Focus Session'): ")
+            if not task.strip():
+                task_name = "Focus Session"
+            try:
+                run_timer(WORK_DURATION, task_name)
+                player.gain_xp(XP_PER_SESSION)
+                
+                # Random flavor text/loot drop chance
+                if random.random() > 0.7:
+                    loot = random.choice(["a Focus Amulet", "a Productivity Potion", "a Time Turner"])
+                    console.print(f"[bold gold1]Lucky Find! You found a {loot}![/bold gold1]")
+
+                save_game(player)
+            except KeyboardInterrupt:
+                console.print("\n[red]Work session aborted! No XP gained.[/red]")
+        
+        elif choice == '2':
+            try:
+                run_timer(BREAK_DURATION, "Short Break")
+            except KeyboardInterrupt:
+                console.print("\n[red]Break ended early.[/red]")
+
+        elif choice == '3':
+            show_stats(player)
+
+        elif choice == '4':
+            save_game(player)
+            console.print("[bold blue]Game saved. Goodbye![/bold blue]")
+            break
+        else:
+            console.print("[red]Invalid choice. Please try again.[/red]")
+
+if __name__ == "__main__":
+    main()

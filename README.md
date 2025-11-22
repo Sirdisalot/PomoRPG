@@ -26,7 +26,7 @@ Installation
 
 Clone the repository:
 
-git clone [https://github.com/YOUR_USERNAME/pomo-rpg.git](https://github.com/YOUR_USERNAME/pomo-rpg.git)
+git clone [https://github.com/Sirdisalot/pomo-rpg.git](https://github.com/Sirdisalot/pomo-rpg.git)
 cd pomo-rpg
 
 

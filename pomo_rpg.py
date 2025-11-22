@@ -219,9 +219,9 @@ def main():
             # Optional: Let user name the task
             task = input("Enter task name (or press Enter for 'Focus Session'): ")
             if not task.strip():
-                task_name = "Focus Session"
+                task = "Focus Session"
             try:
-                run_timer(WORK_DURATION, task_name)
+                run_timer(WORK_DURATION, task)
                 player.gain_xp(XP_PER_SESSION)
                 
                 # Random flavor text/loot drop chance
